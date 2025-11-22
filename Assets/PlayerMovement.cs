@@ -123,17 +123,33 @@ public class PlayerMovement : MonoBehaviour
     {
         bool isGrounded = characterController.isGrounded || IsGrounded();
 
-        if (isGrounded && verticalVelocity < 0f)
-        {
-            verticalVelocity = -2f;
-        }
+        // 统一保证重力方向向下，防止 Inspector 中误填正数时角色缓慢上升
+        float gravityForce = gravity < 0f ? gravity : -gravity;
+        float gravityMagnitude = Mathf.Abs(gravityForce);
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (isGrounded)
         {
-            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
+            if (verticalVelocity < 0f)
+            {
+                verticalVelocity = -2f;
+            }
 
-        verticalVelocity += gravity * Time.deltaTime;
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (gravityMagnitude > 0f)
+                {
+                    verticalVelocity = Mathf.Sqrt(2f * gravityMagnitude * jumpHeight);
+                }
+                else
+                {
+                    verticalVelocity = 0f;
+                }
+            }
+        }
+        else
+        {
+            verticalVelocity += gravityForce * Time.deltaTime;
+        }
 
         Vector3 velocity = moveDirection * walkSpeed;
         velocity.y = verticalVelocity;
