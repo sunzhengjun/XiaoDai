@@ -342,35 +342,21 @@ public class PlayerMovement : MonoBehaviour
     private bool IsGrounded()
     {
         if (characterController == null)
-        {
             return false;
-        }
 
         Bounds bounds = characterController.bounds;
         float radius = characterController.radius;
 
-        // 在角色底部附近放置检测球，稍微向下偏移以覆盖 skinWidth
         Vector3 sphereCenter = bounds.center +
                                Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
 
-        Collider[] hits = Physics.OverlapSphere(
+        // 直接用 groundLayers，不再排除玩家自己的 layer
+        return Physics.CheckSphere(
             sphereCenter,
             radius,
             groundLayers,
             QueryTriggerInteraction.Ignore
         );
-
-        foreach (Collider hit in hits)
-        {
-            if (hit.transform == transform || hit.transform.IsChildOf(transform))
-            {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     // Scene图中显示角色检测范围
