@@ -335,10 +335,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 通过额外的球体检测辅助 CharacterController 的地面判定，防止持续下坠
-    /// </summary>
-    /// <returns>是否接触到地面</returns>
     private bool IsGrounded()
     {
         if (characterController == null)
@@ -350,11 +346,13 @@ public class PlayerMovement : MonoBehaviour
         Vector3 sphereCenter = bounds.center +
                                Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
 
-        // 直接用 groundLayers，不再排除玩家自己的 layer
+        // 从地面层掩码中排除玩家自身层
+        int maskWithoutPlayer = groundLayers & ~(1 << gameObject.layer);
+
         return Physics.CheckSphere(
             sphereCenter,
             radius,
-            groundLayers,
+            maskWithoutPlayer,
             QueryTriggerInteraction.Ignore
         );
     }
