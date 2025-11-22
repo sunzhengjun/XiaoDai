@@ -4,70 +4,73 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("ĞĞ×ß²ÎÊı")]
-    [Tooltip("ĞĞ×ßËÙ¶È£¨µ¥Î»£ºÃ×/Ãë£©")]
-    public float walkSpeed = 4.5f; // ÍÆ¼öÖµ£º4-6£¬Ä£ÄâÕı³£²½ĞĞËÙ¶È
+    [Header("ç§»åŠ¨")]
+    [Tooltip("æ­¥é€Ÿå°ºåº¦")]
+    public float walkSpeed = 4.5f;
 
-    [Tooltip("×ªÏòÆ½»¬Ê±¼ä£¨ÊıÖµÔ½Ğ¡×ªÏòÔ½ÁéÃô£©")]
-    public float turnSmoothTime = 0.1f; // ×ªÏò»º³åÊ±¼ä£¬Ê¹×ªÏò¸ü×ÔÈ»
+    [Tooltip("è½¬å‘å¹³æ»‘æ—¶é—´ï¼ˆå€¼è¶Šå°è½¬å¼¯è¶Šé¡ºç•…ï¼‰")]
+    public float turnSmoothTime = 0.1f;
 
-    [Header("ÒıÓÃÉèÖÃ")]
-    [Tooltip("Ö÷Ïà»ú£¨ÓÃÓÚÈ·¶¨ÒÆ¶¯·½ÏòÓëÊÓ½ÇÒ»ÖÂ£©")]
+    [Header("è§†è§’")]
+    [Tooltip("ç¡®è®¤ç§»åŠ¨æ–¹å‘")]
     public Camera mainCamera;
 
-    // ×é¼şÒıÓÃ
+    // è·³è·ƒ
+    [Header("è·³è·ƒ")]
+    [Tooltip("è·³è·ƒé«˜åº¦")]
+    public float jumpHeight = 1.5f;
+
+    [Tooltip("é‡åŠ›åŠ é€Ÿåº¦")]
+    public float gravity = -9.81f;
+
+    private float verticalVelocity;
+
+    //
     private CharacterController characterController;
 
-    // ×ªÏòÆ½»¬Ïà¹Ø±äÁ¿
+    // è½¬å‘å¹³æ»‘ç³»æ•°
     private float turnSmoothVelocity;
     private Vector3 moveDirection;
 
     private void Start()
     {
-        // »ñÈ¡½ÇÉ«¿ØÖÆÆ÷×é¼ş£¨±ØÑ¡£¬ÓÃÓÚ´¦ÀíÒÆ¶¯ºÍÅö×²£©
+        // è·å–è§’è‰²æ§åˆ¶å™¨
         characterController = GetComponent<CharacterController>();
 
-        // ×Ô¶¯»ñÈ¡Ö÷Ïà»ú£¨Èç¹ûÎ´ÊÖ¶¯Ö¸¶¨£©
+        // è¿œæ‹‰ä¸»ç›®å½•ç›¸æœº
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                Debug.LogWarning("³¡¾°ÖĞÎ´ÕÒµ½Ö÷Ïà»ú£¬ÒÆ¶¯·½Ïò½«»ùÓÚÊÀ½ç×ø±êÏµ");
+                Debug.LogWarning("æœªæ‰¾åˆ°ç›¸æœºï¼Œæ— æ³•æ£€æµ‹æ–¹å‘");
             }
         }
     }
 
     private void Update()
     {
-        // ´¦ÀíĞĞ×ßÂß¼­
+        // ç§»åŠ¨é€»è¾‘
         HandleWalking();
+        HandleJumpAndGravity();
     }
 
     /// <summary>
-    /// ´¦ÀíWASDÊäÈë²¢ÊµÏÖĞĞ×ß¹¦ÄÜ
+    /// WASDç»„åˆå®ç°æ—‹è½¬å¹¶ç§»åŠ¨
     /// </summary>
     private void HandleWalking()
     {
-        // »ñÈ¡WASDÊäÈë£º
-        // Horizontal¶ÔÓ¦A(×ó)ºÍD(ÓÒ)£¬Öµ·¶Î§-1µ½1
-        // Vertical¶ÔÓ¦W(Ç°)ºÍS(ºó)£¬Öµ·¶Î§-1µ½1
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
 
-        // ¹¹½¨ÊäÈë·½ÏòÏòÁ¿£¨ºöÂÔYÖá£¬È·±£Ö»ÓĞË®Æ½ÒÆ¶¯£©
+        // è®¡ç®—æ–¹å‘å‘é‡ï¼Œç¡®ä¿ä»…ä»‹äºæ°´å¹³é¢
         Vector3 inputDirection = new Vector3(horizontalInput, 0f, verticalInput).normalized;
 
-        // µ±ÓĞÓĞĞ§ÊäÈëÊ±£¨ÊäÈëÏòÁ¿³¤¶È´óÓÚ0.1£¬±ÜÃâÎ¢Ğ¡ÊäÈë´¥·¢£©
         if (inputDirection.magnitude >= 0.1f)
         {
-            // ¼ÆËãÒÆ¶¯·½Ïò£¨ÓëÏà»úÊÓ½ÇÍ¬²½£©
             CalculateMoveDirection(inputDirection);
 
-            // ¼ÆËãÄ¿±ê×ªÏò½Ç¶È£¨Ê¹½ÇÉ«ÃæÏòÒÆ¶¯·½Ïò£©
             float targetAngle = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
-
-            // Æ½»¬×ªÏò£¨Ê¹ÓÃ²åÖµÊµÏÖ»º³åĞ§¹û£¬±ÜÃâË²¼ä×ªÏò£©
             float angle = Mathf.SmoothDampAngle(
                 transform.eulerAngles.y,
                 targetAngle,
@@ -75,51 +78,76 @@ public class PlayerMovement : MonoBehaviour
                 turnSmoothTime
             );
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            // Ö´ĞĞÒÆ¶¯£¨³ËÒÔËÙ¶ÈºÍÊ±¼äÔöÁ¿£¬È·±£²»Í¬Ö¡ÂÊÏÂÒÆ¶¯ËÙ¶ÈÒ»ÖÂ£©
-            characterController.Move(moveDirection * walkSpeed * Time.deltaTime);
         }
         else
         {
-            // ÎŞÊäÈëÊ±Í£Ö¹ÒÆ¶¯
             moveDirection = Vector3.zero;
         }
     }
 
     /// <summary>
-    /// ¸ù¾İÊäÈë·½ÏòºÍÏà»úÊÓ½Ç¼ÆËã×îÖÕÒÆ¶¯·½Ïò
+    /// æŒ‰å¯¼èˆªç›¸æœºè®¡ç®—ç§»åŠ¨æ–¹å‘
     /// </summary>
     private void CalculateMoveDirection(Vector3 inputDir)
     {
         if (mainCamera != null)
         {
-            // 1. »ñÈ¡Ïà»úµÄÇ°ÏòºÍÓÒÏòÏòÁ¿£¨ÓÃÓÚ¼ÆËã»ùÓÚÊÓ½ÇµÄÒÆ¶¯·½Ïò£©
             Vector3 cameraForward = mainCamera.transform.forward;
             Vector3 cameraRight = mainCamera.transform.right;
 
-            // 2. ºöÂÔYÖá·ÖÁ¿£¨·ÀÖ¹ÒÆ¶¯Ê±ÉÏÏÂÆ«ÒÆ£©
             cameraForward.y = 0f;
             cameraRight.y = 0f;
 
-            // 3. ¹éÒ»»¯ÏòÁ¿£¨È·±£Ğ±ÏòÒÆ¶¯ËÙ¶ÈÓëÕıÏòÒÆ¶¯Ò»ÖÂ£©
             cameraForward.Normalize();
             cameraRight.Normalize();
 
-            // 4. ¼ÆËã×îÖÕÒÆ¶¯·½Ïò£¨½áºÏÊäÈëºÍÏà»ú·½Ïò£©
             moveDirection = (cameraForward * inputDir.z + cameraRight * inputDir.x).normalized;
         }
         else
         {
-            // ÎŞÏà»úÊ±Ê¹ÓÃÊÀ½ç×ø±êÏµ·½Ïò£¨Ç°=ZÖáÕı·½Ïò£©
             moveDirection = inputDir;
         }
     }
 
-    // ÔÚSceneÊÓÍ¼ÖĞ»æÖÆ½ÇÉ«¿ØÖÆÆ÷·¶Î§£¨·½±ãµ÷ÊÔÅö×²Ìå´óĞ¡£©
+    /// <summary>
+    /// é‡‡é›†è·³è·ƒå’Œé‡åŠ›é€»è¾‘
+    /// </summary>
+    private void HandleJumpAndGravity()
+    {
+        bool isGrounded = characterController.isGrounded;
+
+        if (isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        verticalVelocity += gravity * Time.deltaTime;
+
+        Vector3 velocity = moveDirection * walkSpeed;
+        velocity.y = verticalVelocity;
+
+        characterController.Move(velocity * Time.deltaTime);
+    }
+
+    // Sceneå›¾ä¸­æ˜¾ç¤ºè§’è‰²æ£€æµ‹èŒƒå›´
     private void OnDrawGizmosSelected()
     {
+        if (characterController == null)
+        {
+            characterController = GetComponent<CharacterController>();
+        }
+
+        if (characterController == null)
+        {
+            return;
+        }
+
         Gizmos.color = Color.cyan;
-        // »æÖÆ½ÇÉ«¿ØÖÆÆ÷µÄÅö×²·¶Î§
         Gizmos.DrawWireCube(
             transform.position + Vector3.up * characterController.height / 2,
             new Vector3(
