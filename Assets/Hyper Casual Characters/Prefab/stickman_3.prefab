@@ -84,7 +84,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage:
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -99,11 +99,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 86432d6b96e5404ebc180162e96d8c2e, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   player: {fileID: 0}
   playerTag: Player
-  playerObjectName: "玩家"
-  attackRange: 3
+  playerObjectName: "\u73A9\u5BB6"
+  attackRange: 20
   idleClip: {fileID: 7400000, guid: f8126e2e98ebe274981eba864f0ba705, type: 2}
   attackController: {fileID: 9100000, guid: 2c985bd734f34d542b713d6d54795539, type: 2}

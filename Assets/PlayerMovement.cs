@@ -121,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void HandleJumpAndGravity()
     {
-        bool isGrounded = IsGrounded();
+        bool isGrounded = characterController.isGrounded || IsGrounded();
 
         // 统一保证重力方向向下，防止 Inspector 中误填正数时角色缓慢上升
         float gravityForce = gravity < 0f ? gravity : -gravity;
@@ -153,17 +153,13 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 velocity = moveDirection * walkSpeed;
         velocity.y = verticalVelocity;
-
+        
         // 优先依据当前帧的预期移动更新碰撞状态，防止地面判定延迟导致持续下落
         CollisionFlags collisionFlags = characterController.Move(velocity * Time.deltaTime);
 
-        if ((collisionFlags & CollisionFlags.Below) != 0)
+        if ((collisionFlags & CollisionFlags.Below) != 0 && verticalVelocity < 0f)
         {
-            isGrounded = true;
-            if (verticalVelocity < 0f)
-            {
-                verticalVelocity = -2f;
-            }
+            verticalVelocity = -2f;
         }
     }
 
@@ -188,8 +184,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 sphereCenter = bounds.center +
                                Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
 
-        return Physics.SphereCast(
-            bounds.center,
+        return Physics.CheckSphere(
+            sphereCenter,
             radius,
             groundMaskWithoutPlayer,
             QueryTriggerInteraction.Ignore
@@ -222,10 +218,8 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.color = Color.yellow;
         Bounds bounds = characterController.bounds;
         float radius = characterController.radius;
-        float extraDistance = groundCheckOffset + characterController.skinWidth + 0.01f;
         Vector3 sphereCenter = bounds.center +
-                               Vector3.down * (bounds.extents.y - radius + extraDistance);
-        Gizmos.DrawWireSphere(bounds.center, radius);
+                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
         Gizmos.DrawWireSphere(sphereCenter, radius);
     }
 }
