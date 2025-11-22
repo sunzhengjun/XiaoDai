@@ -121,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void HandleJumpAndGravity()
     {
-        bool isGrounded = characterController.isGrounded || IsGrounded();
+        bool isGrounded = IsGrounded();
 
         // 统一保证重力方向向下，防止 Inspector 中误填正数时角色缓慢上升
         float gravityForce = gravity < 0f ? gravity : -gravity;
@@ -153,13 +153,17 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 velocity = moveDirection * walkSpeed;
         velocity.y = verticalVelocity;
-        
+
         // 优先依据当前帧的预期移动更新碰撞状态，防止地面判定延迟导致持续下落
         CollisionFlags collisionFlags = characterController.Move(velocity * Time.deltaTime);
 
-        if ((collisionFlags & CollisionFlags.Below) != 0 && verticalVelocity < 0f)
+        if ((collisionFlags & CollisionFlags.Below) != 0)
         {
-            verticalVelocity = -2f;
+            isGrounded = true;
+            if (verticalVelocity < 0f)
+            {
+                verticalVelocity = -2f;
+            }
         }
     }
 
@@ -177,14 +181,20 @@ public class PlayerMovement : MonoBehaviour
         Bounds bounds = characterController.bounds;
         float radius = characterController.radius;
 
-        // 在角色底部附近放置检测球，稍微向下偏移以覆盖 skinWidth
-        Vector3 sphereCenter = bounds.center +
-                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
+        // 避免角色自身的碰撞体被误判为地面
+        int groundMaskWithoutPlayer = groundLayers & ~(1 << gameObject.layer);
 
-        return Physics.CheckSphere(
-            sphereCenter,
+        // 使用 SphereCast 覆盖 skinWidth 附近的区域，避免因轻微缝隙造成的判定失败
+        float extraDistance = groundCheckOffset + characterController.skinWidth + 0.01f;
+        float castDistance = bounds.extents.y - radius + extraDistance;
+
+        return Physics.SphereCast(
+            bounds.center,
             radius,
-            groundLayers,
+            Vector3.down,
+            out _,
+            castDistance,
+            groundMaskWithoutPlayer,
             QueryTriggerInteraction.Ignore
         );
     }
@@ -215,8 +225,10 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.color = Color.yellow;
         Bounds bounds = characterController.bounds;
         float radius = characterController.radius;
+        float extraDistance = groundCheckOffset + characterController.skinWidth + 0.01f;
         Vector3 sphereCenter = bounds.center +
-                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
+                               Vector3.down * (bounds.extents.y - radius + extraDistance);
+        Gizmos.DrawWireSphere(bounds.center, radius);
         Gizmos.DrawWireSphere(sphereCenter, radius);
     }
 }
