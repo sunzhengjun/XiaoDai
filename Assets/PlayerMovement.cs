@@ -177,6 +177,9 @@ public class PlayerMovement : MonoBehaviour
         Bounds bounds = characterController.bounds;
         float radius = characterController.radius;
 
+        // 避免角色自身的碰撞体被误判为地面
+        int groundMaskWithoutPlayer = groundLayers & ~(1 << gameObject.layer);
+
         // 在角色底部附近放置检测球，稍微向下偏移以覆盖 skinWidth
         Vector3 sphereCenter = bounds.center +
                                Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
@@ -184,7 +187,7 @@ public class PlayerMovement : MonoBehaviour
         return Physics.CheckSphere(
             sphereCenter,
             radius,
-            groundLayers,
+            groundMaskWithoutPlayer,
             QueryTriggerInteraction.Ignore
         );
     }
