@@ -184,16 +184,13 @@ public class PlayerMovement : MonoBehaviour
         // 避免角色自身的碰撞体被误判为地面
         int groundMaskWithoutPlayer = groundLayers & ~(1 << gameObject.layer);
 
-        // 使用 SphereCast 覆盖 skinWidth 附近的区域，避免因轻微缝隙造成的判定失败
-        float extraDistance = groundCheckOffset + characterController.skinWidth + 0.01f;
-        float castDistance = bounds.extents.y - radius + extraDistance;
+        // 在角色底部附近放置检测球，稍微向下偏移以覆盖 skinWidth
+        Vector3 sphereCenter = bounds.center +
+                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
 
         return Physics.SphereCast(
             bounds.center,
             radius,
-            Vector3.down,
-            out _,
-            castDistance,
             groundMaskWithoutPlayer,
             QueryTriggerInteraction.Ignore
         );
