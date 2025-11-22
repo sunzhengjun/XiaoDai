@@ -130,8 +130,14 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 velocity = moveDirection * walkSpeed;
         velocity.y = verticalVelocity;
+        
+        // 优先依据当前帧的预期移动更新碰撞状态，防止地面判定延迟导致持续下落
+        CollisionFlags collisionFlags = characterController.Move(velocity * Time.deltaTime);
 
-        characterController.Move(velocity * Time.deltaTime);
+        if ((collisionFlags & CollisionFlags.Below) != 0 && verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
     }
 
     // Scene图中显示角色检测范围
