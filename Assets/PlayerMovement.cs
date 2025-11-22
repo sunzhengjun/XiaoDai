@@ -23,6 +23,13 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("重力加速度")]
     public float gravity = -9.81f;
 
+    [Header("地面检测")]
+    [Tooltip("地面检测向下偏移量，避免高速下落时漏判")]
+    public float groundCheckOffset = 0.05f;
+
+    [Tooltip("被视为地面的层级掩码")]
+    public LayerMask groundLayers = ~0;
+
     private float verticalVelocity;
 
     //
@@ -114,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void HandleJumpAndGravity()
     {
-        bool isGrounded = characterController.isGrounded;
+        bool isGrounded = characterController.isGrounded || IsGrounded();
 
         if (isGrounded && verticalVelocity < 0f)
         {
@@ -140,6 +147,32 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 通过额外的球体检测辅助 CharacterController 的地面判定，防止持续下坠
+    /// </summary>
+    /// <returns>是否接触到地面</returns>
+    private bool IsGrounded()
+    {
+        if (characterController == null)
+        {
+            return false;
+        }
+
+        Bounds bounds = characterController.bounds;
+        float radius = characterController.radius;
+
+        // 在角色底部附近放置检测球，稍微向下偏移以覆盖 skinWidth
+        Vector3 sphereCenter = bounds.center +
+                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
+
+        return Physics.CheckSphere(
+            sphereCenter,
+            radius,
+            groundLayers,
+            QueryTriggerInteraction.Ignore
+        );
+    }
+
     // Scene图中显示角色检测范围
     private void OnDrawGizmosSelected()
     {
@@ -162,5 +195,12 @@ public class PlayerMovement : MonoBehaviour
                 characterController.radius * 2
             )
         );
+
+        Gizmos.color = Color.yellow;
+        Bounds bounds = characterController.bounds;
+        float radius = characterController.radius;
+        Vector3 sphereCenter = bounds.center +
+                               Vector3.down * (bounds.extents.y - radius + groundCheckOffset);
+        Gizmos.DrawWireSphere(sphereCenter, radius);
     }
 }
